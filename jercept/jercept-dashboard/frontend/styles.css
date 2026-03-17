@@ -1,0 +1,167 @@
+/* Jercept Dashboard — Dark Security Theme */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ── Reset & Base ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-base:     #0a0d14;
+  --bg-card:     #0f1420;
+  --bg-elevated: #151c2c;
+  --border:      #1e2a3f;
+  --border-soft: #162035;
+
+  --text-primary:   #e8eaf0;
+  --text-secondary: #8b9ab5;
+  --text-muted:     #4a5568;
+
+  --teal:    #00d4aa;
+  --teal-dim: #00a07f;
+  --red:     #ff4d5a;
+  --red-dim: #c0313c;
+  --amber:   #ffb84d;
+  --blue:    #4d9fff;
+
+  --radius: 10px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+
+html { height: 100%; font-size: 15px; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ── Layout ────────────────────────────────────────────────────── */
+.page-wrap { max-width: 1320px; margin: 0 auto; padding: 0 24px; }
+
+/* ── Header ───────────────────────────────────────────────────── */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 0; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,13,20,0.95); backdrop-filter: blur(12px);
+}
+.header-logo { display: flex; align-items: center; gap: 12px; }
+.logo-icon {
+  width: 38px; height: 38px; border-radius: 9px;
+  background: linear-gradient(135deg, var(--teal) 0%, var(--blue) 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; color: #000;
+}
+.logo-text { font-size: 18px; font-weight: 700; letter-spacing: -0.4px; }
+.logo-text span { color: var(--teal); }
+
+.header-meta { display: flex; align-items: center; gap: 16px; }
+.api-key-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: 20px; padding: 6px 14px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  color: var(--text-secondary);
+}
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 6px var(--teal);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.last-refresh { font-size: 12px; color: var(--text-muted); }
+
+/* ── Grid ──────────────────────────────────────────────────────── */
+.main { padding: 32px 0 60px; }
+
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px; margin-bottom: 28px;
+}
+@media (max-width: 900px) { .metrics-row { grid-template-columns: repeat(2, 1fr); } }
+
+.charts-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px; margin-bottom: 28px;
+}
+@media (max-width: 1000px) { .charts-row { grid-template-columns: 1fr; } }
+
+/* ── Cards ─────────────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: #253048; }
+
+.card-title {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px;
+}
+
+/* ── Metric Cards ──────────────────────────────────────────────── */
+.metric-card { text-align: center; }
+.metric-value {
+  font-size: 38px; font-weight: 700; letter-spacing: -1px;
+  line-height: 1.1; margin-bottom: 4px;
+}
+.metric-value.teal   { color: var(--teal); }
+.metric-value.red    { color: var(--red); }
+.metric-value.amber  { color: var(--amber); }
+.metric-value.blue   { color: var(--blue); }
+.metric-label { font-size: 13px; color: var(--text-secondary); }
+
+/* ── Chart containers ──────────────────────────────────────────── */
+.chart-wrap { position: relative; height: 260px; }
+
+/* ── Event Table ───────────────────────────────────────────────── */
+.event-table-wrap { overflow-x: auto; }
+table.event-table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+}
+table.event-table th {
+  text-align: left; padding: 10px 12px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+table.event-table td {
+  padding: 10px 12px; border-bottom: 1px solid var(--border-soft);
+  color: var(--text-secondary); vertical-align: middle;
+}
+table.event-table tr:last-child td { border-bottom: none; }
+table.event-table tr.blocked-row td { background: rgba(255,77,90,0.04); }
+table.event-table tr:hover td { background: var(--bg-elevated); }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+}
+.badge.allowed { background: rgba(0,212,170,0.12); color: var(--teal); }
+.badge.blocked  { background: rgba(255,77,90,0.12); color: var(--red); }
+
+.mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+/* ── Loading / empty states ────────────────────────────────────── */
+.loading { color: var(--text-muted); font-size: 13px; padding: 20px 0; text-align: center; }
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 40px 0; color: var(--text-muted); gap: 8px;
+}
+.empty-state span { font-size: 30px; }
+
+/* ── Scrollbar ─────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }

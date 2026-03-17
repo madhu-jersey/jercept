@@ -1,0 +1,33 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Run pytest
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install package and dev dependencies
+        run: pip install -e ".[dev]"
+        # pyproject.toml [project.dependencies] includes openai, httpx, pyyaml, click
+        # pyproject.toml [project.optional-dependencies.dev] includes pytest, pytest-asyncio, pytest-mock
+
+      - name: Run tests
+        run: pytest tests/ -v --tb=short -x --strict-markers

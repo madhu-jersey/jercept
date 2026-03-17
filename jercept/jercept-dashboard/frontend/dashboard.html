@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Jercept — Security Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;
+      --indigo:#6366f1;--cyan:#22d3ee;--red:#f43f5e;
+      --green:#10b981;--amber:#f59e0b;
+      --text:#f1f5f9;--muted:#94a3b8;--dim:#475569;
+    }
+    body{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    .header{background:var(--surface);border-bottom:0.5px solid var(--border);padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+    .logo{font-size:1.1rem;font-weight:700;letter-spacing:-0.02em}.logo span{color:var(--indigo)}
+    .header-right{display:flex;align-items:center;gap:12px}
+    .key-badge{background:var(--bg);border:0.5px solid var(--border);border-radius:6px;padding:4px 12px;font-size:12px;font-family:monospace;color:var(--muted)}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px}
+    .dot.red{background:var(--red)}
+    .refresh-btn{background:transparent;border:0.5px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--muted);font-size:12px;cursor:pointer}
+    .refresh-btn:hover{border-color:var(--indigo);color:var(--text)}
+    .main{padding:1.5rem 2rem;max-width:1400px;margin:0 auto}
+    /* Metrics */
+    .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem}
+    .card{background:var(--surface);border:0.5px solid var(--border);border-radius:10px;padding:1.25rem}
+    .card-title{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem}
+    .metric-val{font-size:2rem;font-weight:600;line-height:1}
+    .metric-sub{font-size:11px;color:var(--dim);margin-top:4px}
+    .c-indigo{color:var(--indigo)}.c-red{color:var(--red)}.c-green{color:var(--green)}.c-amber{color:var(--amber)}
+    /* Charts */
+    .charts{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:1.5rem}
+    .chart-wrap{height:200px;position:relative}
+    /* Tabs */
+    .tabs{display:flex;gap:2px;border-bottom:0.5px solid var(--border);margin-bottom:1rem}
+    .tab{padding:8px 16px;font-size:13px;cursor:pointer;border:none;background:transparent;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-0.5px}
+    .tab.active{color:var(--text);border-bottom-color:var(--indigo);font-weight:500}
+    .tab:hover:not(.active){color:var(--text)}
+    .tab-pane{display:none}.tab-pane.active{display:block}
+    /* Event table */
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th{padding:8px 12px;text-align:left;font-size:11px;font-weight:500;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;border-bottom:0.5px solid var(--border)}
+    td{padding:10px 12px;border-bottom:0.5px solid var(--border);vertical-align:top}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(99,102,241,.04)}
+    .badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:999px;font-weight:500}
+    .badge.allowed{background:rgba(16,185,129,.15);color:var(--green)}
+    .badge.blocked{background:rgba(244,63,94,.15);color:var(--red)}
+    .action-pill{font-family:monospace;font-size:11px;background:rgba(99,102,241,.1);color:var(--indigo);padding:2px 7px;border-radius:4px}
+    .intent-text{color:var(--muted);font-size:12px;max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    /* Scope visualizer */
+    .scope-card{background:var(--bg);border:0.5px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:.75rem}
+    .scope-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem}
+    .scope-intent{font-size:13px;font-weight:500;margin-bottom:2px}
+    .scope-meta{font-size:11px;color:var(--dim)}
+    .scope-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .scope-section-title{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+    .scope-section-title.green{color:var(--green)}
+    .scope-section-title.red{color:var(--red)}
+    .scope-section-title.cyan{color:var(--cyan)}
+    .scope-tag{display:inline-block;font-family:monospace;font-size:11px;padding:2px 6px;border-radius:4px;margin:1px}
+    .scope-tag.green{background:rgba(16,185,129,.12);color:var(--green)}
+    .scope-tag.red{background:rgba(244,63,94,.12);color:var(--red)}
+    .scope-tag.cyan{background:rgba(34,211,238,.12);color:var(--cyan)}
+    .scope-tag.dim{background:rgba(71,85,105,.2);color:var(--dim)}
+    .tier-badge{font-size:10px;padding:2px 8px;border-radius:999px;font-weight:500}
+    .tier-badge.cache{background:rgba(16,185,129,.15);color:var(--green)}
+    .tier-badge.regex{background:rgba(245,158,11,.15);color:var(--amber)}
+    .tier-badge.llm{background:rgba(99,102,241,.15);color:var(--indigo)}
+    .conf-bar-wrap{display:flex;align-items:center;gap:6px;margin-top:6px}
+    .conf-bar{height:4px;background:var(--border);border-radius:2px;flex:1;overflow:hidden}
+    .conf-fill{height:100%;border-radius:2px;background:var(--green)}
+    .empty-state{text-align:center;padding:3rem;color:var(--dim);font-size:13px}
+    .loading{color:var(--dim);font-size:13px;padding:1rem}
+    @media(max-width:768px){
+      .metrics{grid-template-columns:1fr 1fr}
+      .charts{grid-template-columns:1fr}
+      .scope-body{grid-template-columns:1fr}
+      .main{padding:1rem}
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo"><span>[J]</span>ercept Security Dashboard</div>
+  <div class="header-right">
+    <span id="status-dot" class="dot red"></span>
+    <span class="key-badge" id="key-display">jercept_live_••••••••</span>
+    <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
+    <button class="refresh-btn" onclick="logout()">Sign out</button>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- Metrics -->
+  <div class="metrics">
+    <div class="card">
+      <div class="card-title">Total Requests</div>
+      <div class="metric-val c-indigo" id="m-total">—</div>
+      <div class="metric-sub">Last 24 hours</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Attacks Blocked</div>
+      <div class="metric-val c-red" id="m-blocked">—</div>
+      <div class="metric-sub">Tool calls denied</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Block Rate</div>
+      <div class="metric-val c-amber" id="m-rate">—</div>
+      <div class="metric-sub">% of all calls</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Permitted Calls</div>
+      <div class="metric-val c-green" id="m-allowed">—</div>
+      <div class="metric-sub">Safe tool executions</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts">
+    <div class="card">
+      <div class="card-title">Activity Timeline</div>
+      <div class="chart-wrap"><canvas id="timeline-chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Top Blocked Actions</div>
+      <div class="chart-wrap"><canvas id="blocked-chart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('events')">Live Events</button>
+      <button class="tab" onclick="switchTab('scope')">Scope Visualizer</button>
+      <button class="tab" onclick="switchTab('intents')">Top Intents</button>
+    </div>
+
+    <!-- Events tab -->
+    <div class="tab-pane active" id="tab-events">
+      <div id="events-loading" class="loading">Loading events…</div>
+      <table id="events-table" style="display:none">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Intent</th>
+            <th>Action</th>
+            <th>Resource</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="events-body"></tbody>
+      </table>
+      <div class="empty-state" id="events-empty" style="display:none">
+        No events yet. Start a protected agent to see activity here.
+      </div>
+    </div>
+
+    <!-- Scope Visualizer tab -->
+    <div class="tab-pane" id="tab-scope">
+      <div id="scope-loading" class="loading">Loading scope data…</div>
+      <div id="scope-container"></div>
+      <div class="empty-state" id="scope-empty" style="display:none">
+        No scope data yet. Each agent.run() generates a scope entry here.
+      </div>
+    </div>
+
+    <!-- Top intents tab -->
+    <div class="tab-pane" id="tab-intents">
+      <div id="intents-loading" class="loading">Loading intents…</div>
+      <table id="intents-table" style="display:none">
+        <thead>
+          <tr><th>User Intent</th><th>Count</th></tr>
+        </thead>
+        <tbody id="intents-body"></tbody>
+      </table>
+      <div class="empty-state" id="intents-empty" style="display:none">No intent data yet.</div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const API_BASE = window.location.origin;
+
+  // SEC FIX: Escape user-controlled strings before inserting into DOM
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+let apiKey = new URLSearchParams(location.search).get('key') ||
+             sessionStorage.getItem('jercept_api_key') || '';
+let timelineChart, blockedChart;
+
+if (!apiKey) { location.href = '/'; }
+
+// Show masked key in header
+document.getElementById('key-display').textContent =
+  apiKey.slice(0, 15) + '••••••••';
+
+function logout() {
+  sessionStorage.removeItem('jercept_api_key');
+  location.href = '/';
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['events','scope','intents'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+async function loadData() {
+  try {
+    const r = await fetch(`${API_BASE}/v1/dashboard?hours=24&limit=500`, {
+      headers: { 'Authorization': `Bearer ${apiKey}` }
+    });
+    if (!r.ok) {
+      if (r.status === 401) { location.href = '/'; return; }
+      throw new Error(`HTTP ${r.status}`);
+    }
+    const data = await r.json();
+    document.getElementById('status-dot').className = 'dot';
+    renderMetrics(data);
+    renderTimeline(data.attack_timeline || []);
+    renderBlocked(data.top_blocked_actions || []);
+    renderEvents(data.recent_events || []);
+    renderScope(data.scope_timeline || []);
+    renderIntents(data.top_intents || []);
+  } catch(e) {
+    document.getElementById('status-dot').className = 'dot red';
+    console.error('Dashboard load failed:', e);
+  }
+}
+
+function renderMetrics(d) {
+  document.getElementById('m-total').textContent = d.total_requests.toLocaleString();
+  document.getElementById('m-blocked').textContent = d.blocked_attacks.toLocaleString();
+  document.getElementById('m-rate').textContent = d.block_rate.toFixed(1) + '%';
+  document.getElementById('m-allowed').textContent =
+    (d.total_requests - d.blocked_attacks).toLocaleString();
+}
+
+function renderTimeline(points) {
+  const labels = points.map(p => p.hour.slice(11,16));
+  const blocked = points.map(p => p.blocked);
+  const allowed = points.map(p => p.allowed);
+  if (timelineChart) timelineChart.destroy();
+  timelineChart = new Chart(document.getElementById('timeline-chart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label:'Blocked', data:blocked, borderColor:'#f43f5e', backgroundColor:'rgba(244,63,94,.1)', tension:.3, fill:true },
+        { label:'Allowed', data:allowed, borderColor:'#10b981', backgroundColor:'rgba(16,185,129,.1)', tension:.3, fill:true },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ color:'#94a3b8', boxWidth:12 }}},
+      scales:{
+        x:{ ticks:{color:'#475569'}, grid:{color:'#1e1e2e'} },
+        y:{ ticks:{color:'#475569'}, grid:{color:'#1e1e2e'}, beginAtZero:true }
+      }
+    }
+  });
+}
+
+function renderBlocked(items) {
+  if (blockedChart) blockedChart.destroy();
+  blockedChart = new Chart(document.getElementById('blocked-chart'), {
+    type: 'doughnut',
+    data: {
+      labels: items.map(i => i.action),
+      datasets:[{ data: items.map(i => i.count),
+        backgroundColor:['#f43f5e','#6366f1','#f59e0b','#10b981','#22d3ee','#8b5cf6','#ec4899','#14b8a6','#f97316','#06b6d4'],
+        borderWidth:0 }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'right', labels:{ color:'#94a3b8', boxWidth:10, font:{size:11} }}}
+    }
+  });
+}
+
+function renderEvents(events) {
+  document.getElementById('events-loading').style.display = 'none';
+  if (!events.length) {
+    document.getElementById('events-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('events-table').style.display = 'table';
+  const tbody = document.getElementById('events-body');
+  tbody.innerHTML = events.map(e => `
+    <tr>
+      <td style="color:var(--dim);font-size:11px;white-space:nowrap">${new Date(e.ts).toLocaleTimeString()}</td>
+      <td><span class="intent-text">${escapeHtml(e.raw_intent) || '—'}</span></td>
+      <td><span class="action-pill">${escapeHtml(e.action)}</span></td>
+      <td style="color:var(--muted);font-size:12px">${escapeHtml(e.resource) || '—'}</td>
+      <td><span class="badge ${e.permitted ? 'allowed' : 'blocked'}">${e.permitted ? 'ALLOWED' : 'BLOCKED'}</span></td>
+    </tr>
+  `).join('');
+}
+
+function renderScope(scopes) {
+  document.getElementById('scope-loading').style.display = 'none';
+  const container = document.getElementById('scope-container');
+  if (!scopes.length) {
+    document.getElementById('scope-empty').style.display = 'block';
+    container.innerHTML = '';
+    return;
+  }
+  container.innerHTML = scopes.map(s => {
+    const tierClass = s.extraction_tier || 'llm';
+    const tierLabel = s.extraction_tier === 'cache' ? 'Cache (0ms)' :
+                      s.extraction_tier === 'regex' ? 'Regex (2ms)' : 'LLM (~200ms)';
+    const conf = s.confidence ? Math.round(s.confidence * 100) : 0;
+    const confColor = conf >= 80 ? 'var(--green)' : conf >= 60 ? 'var(--amber)' : 'var(--red)';
+    const allowed = (s.allowed_actions || []).map(a =>
+      `<span class="scope-tag green">${a}</span>`).join('') || '<span class="scope-tag dim">none</span>';
+    const denied = (s.denied_actions || []).slice(0,5).map(a =>
+      `<span class="scope-tag red">${a}</span>`).join('') +
+      (s.denied_actions?.length > 5 ? `<span class="scope-tag dim">+${s.denied_actions.length-5}</span>` : '');
+    const resources = (s.allowed_resources || []).map(r =>
+      `<span class="scope-tag cyan">${r}</span>`).join('') || '<span class="scope-tag dim">any</span>';
+    return `
+      <div class="scope-card">
+        <div class="scope-header">
+          <div>
+            <div class="scope-intent">${s.raw_intent ? `"${escapeHtml(s.raw_intent).slice(0,80)}"` : '(no intent recorded)'}</div>
+            <div class="scope-meta">
+              ${new Date(s.ts).toLocaleString()} &nbsp;·&nbsp;
+              ${s.total_calls} calls &nbsp;·&nbsp;
+              ${s.blocked_calls > 0 ? `<span style="color:var(--red)">${s.blocked_calls} blocked</span>` : '<span style="color:var(--green)">0 blocked</span>'}
+            </div>
+          </div>
+          <span class="tier-badge ${tierClass}">${tierLabel}</span>
+        </div>
+        <div class="scope-body">
+          <div>
+            <div class="scope-section-title green">✓ Allowed actions</div>
+            <div>${allowed}</div>
+          </div>
+          <div>
+            <div class="scope-section-title red">✗ Denied actions</div>
+            <div>${denied || '<span class="scope-tag dim">none</span>'}</div>
+          </div>
+          <div>
+            <div class="scope-section-title cyan">● Resources</div>
+            <div>${resources}</div>
+          </div>
+        </div>
+        <div class="conf-bar-wrap">
+          <span style="font-size:11px;color:var(--dim)">Confidence</span>
+          <div class="conf-bar"><div class="conf-fill" style="width:${conf}%;background:${confColor}"></div></div>
+          <span style="font-size:11px;color:${confColor}">${conf}%</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderIntents(intents) {
+  document.getElementById('intents-loading').style.display = 'none';
+  if (!intents.length) {
+    document.getElementById('intents-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('intents-table').style.display = 'table';
+  document.getElementById('intents-body').innerHTML = intents.map(i => `
+    <tr>
+      <td style="color:var(--muted)">${i.intent}</td>
+      <td><strong>${i.count}</strong></td>
+    </tr>
+  `).join('');
+}
+
+// Load on start, refresh every 30s
+loadData();
+setInterval(loadData, 30000);
+</script>
+</body>
+</html>

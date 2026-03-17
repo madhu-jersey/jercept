@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Jercept — Security Dashboard</title>
+  <meta name="description" content="Real-time IBAC security monitoring for AI agents."/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif;background:#0a0a0f;color:#f1f5f9;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+    .hero{text-align:center;padding:3rem 2rem;max-width:600px}
+    .logo{font-size:2rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:1rem}
+    .logo span{color:#6366f1}
+    .tagline{color:#94a3b8;font-size:1.1rem;margin-bottom:2.5rem;line-height:1.6}
+    .login-form{background:#111118;border:0.5px solid #1e1e2e;border-radius:12px;padding:2rem;width:100%;max-width:380px;margin:0 auto}
+    .form-label{font-size:12px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:block}
+    .form-input{width:100%;background:#0a0a0f;border:0.5px solid #1e1e2e;border-radius:8px;padding:10px 14px;color:#f1f5f9;font-size:14px;font-family:monospace;outline:none;transition:border-color .2s}
+    .form-input:focus{border-color:#6366f1}
+    .form-input::placeholder{color:#475569}
+    .btn{width:100%;background:#6366f1;border:none;border-radius:8px;padding:12px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;margin-top:1rem;transition:opacity .2s}
+    .btn:hover{opacity:.9}
+    .error{color:#f43f5e;font-size:12px;margin-top:8px;display:none}
+    .footer{color:#475569;font-size:12px;margin-top:2rem}
+    .footer a{color:#6366f1;text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <div class="logo"><span>[J]</span>ercept</div>
+    <div class="tagline">Real-time IBAC security monitoring.<br>Every tool call. Every blocked injection.</div>
+    <div class="login-form">
+      <label class="form-label" for="apikey">Your API Key</label>
+      <input class="form-input" id="apikey" type="password"
+             placeholder="jercept_live_••••••••••••••••" autocomplete="off"/>
+      <div class="error" id="error">Invalid API key — check and try again.</div>
+      <button class="btn" onclick="login()">Open Dashboard →</button>
+    </div>
+    <div class="footer">
+      Don't have a key? <a href="https://jercept.com">Get one free</a> ·
+      <a href="https://github.com/jercept/jercept">GitHub</a>
+    </div>
+  </div>
+  <script>
+    // Pre-fill from URL param or sessionStorage
+    const saved = sessionStorage.getItem('jercept_api_key') || new URLSearchParams(location.search).get('key');
+    if (saved) document.getElementById('apikey').value = saved;
+
+    function login() {
+      const key = document.getElementById('apikey').value.trim();
+      if (!key.startsWith('jercept_live_') || key.length < 20) {
+        document.getElementById('error').style.display = 'block';
+        return;
+      }
+      sessionStorage.setItem('jercept_api_key', key);
+      location.href = `/dashboard?key=${encodeURIComponent(key)}`;
+    }
+    document.getElementById('apikey').addEventListener('keydown', e => {
+      if (e.key === 'Enter') login();
+    });
+  </script>
+</body>
+</html>

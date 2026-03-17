@@ -1,0 +1,35 @@
+{
+  "name": "jercept",
+  "version": "1.2.0",
+  "description": "The authorization layer for AI agents — IBAC stops prompt injection where detection always fails.",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "ai", "security", "agents", "prompt-injection",
+    "ibac", "authorization", "langchain", "openai", "mcp"
+  ],
+  "author": "Jercept Security",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jercept/jercept-js"
+  },
+  "homepage": "https://jercept.com",
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  }
+}
