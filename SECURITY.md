@@ -4,7 +4,7 @@
 
 If you find a security vulnerability in Jercept — including issues with the IBAC model, injection scanner, scope enforcement, or dashboard — **do not open a public GitHub issue.**
 
-Email: **security@jercept.com**
+Email: **madhujersey9999**
 
 Include:
 - Description of the vulnerability
