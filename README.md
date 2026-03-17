@@ -644,8 +644,6 @@ All PRs require tests for new functionality. Type hints and docstrings required 
 
 MIT — see [LICENSE](LICENSE).
 
-Built by [Jercept Security](https://jercept.com).
-
 ---
 
 <div align="center">
