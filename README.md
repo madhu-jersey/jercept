@@ -652,6 +652,5 @@ Built by [Jercept Security](https://jercept.com).
 
 **"The same paradigm shift OAuth brought to web APIs, IBAC brings to agentic AI."**
 
-[jercept.com](https://jercept.com) · [Dashboard](https://app.jercept.com) · [PyPI](https://pypi.org/project/jercept/)
 
 </div>
